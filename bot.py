@@ -305,7 +305,8 @@ class TelegramCryptoBot:
         self.db = DatabaseManager()
         self.market = CryptoDataManager(self.db)
         self.ai = EnhancedAITradingEngine(self.db, self.market)
-        self.scheduler = None  # Initialize later when event loop is available
+       from apscheduler.schedulers.asyncio import AsyncIOScheduler
+        self.scheduler = AsyncIOScheduler()
         self.app = Application.builder().token(token).build()
 
         # Handlers -------------------------------------------------------------
