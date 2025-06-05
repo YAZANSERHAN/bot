@@ -394,20 +394,15 @@ def main():
             os.getenv("BINANCE_API_SECRET")
         )
 
-    # Move scheduler and training to inside run() or before it
-    bot.scheduler.add_job(bot.broadcast_signals, "interval", hours=4)
+    async def bootstrap():
+        for sym in TelegramCryptoBot.popular[:3]:
+            await bot.ai.train(sym)
 
-    # Optionally pre-train models synchronously
-    import asyncio
-    loop = asyncio.get_event_loop()
-    for sym in TelegramCryptoBot.popular[:3]:
-        loop.run_until_complete(bot.ai.train(sym))
+        bot.scheduler.start()  # start scheduler inside the async context
+        bot.run()  # this will block (starts telegram polling)
 
-    # Then run polling (manages its own loop)
-    bot.run()
+    # This ensures the async loop is created and running
+    asyncio.run(bootstrap())
 
-
-if __name__ == "__main__":
-    main()
 
 
