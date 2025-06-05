@@ -370,6 +370,9 @@ class TelegramCryptoBot:
     def run(self):
         logger.info("Bot polling …")
         
+    # Move scheduler and training to inside run() or before it
+    bot.scheduler.add_job(bot.broadcast_signals, "interval", hours=4)
+  
         # Initialize scheduler now that we have an event loop
         self.scheduler = AsyncIOScheduler()
         self.scheduler.add_job(self.broadcast_signals, "interval", hours=4)
@@ -393,9 +396,6 @@ def main():
             os.getenv("BINANCE_API_KEY"),
             os.getenv("BINANCE_API_SECRET")
         )
-
-    # Move scheduler and training to inside run() or before it
-    bot.scheduler.add_job(bot.broadcast_signals, "interval", hours=4)
 
     # Optionally pre-train models synchronously
     import asyncio
