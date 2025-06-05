@@ -388,23 +388,26 @@ def main():
 
     bot = TelegramCryptoBot(token)
 
-    # Optional Binance API keys (only if available in your .env)
     if os.getenv("BINANCE_API_KEY") and os.getenv("BINANCE_API_SECRET"):
         bot.market.init_binance(
             os.getenv("BINANCE_API_KEY"),
             os.getenv("BINANCE_API_SECRET")
         )
 
-    # Async setup and run
-    async def bootstrap():
-        for sym in TelegramCryptoBot.popular[:3]:
-            await bot.ai.train(sym)
-        bot.scheduler.start()
-        bot.run()
+    # Move scheduler and training to inside run() or before it
+    bot.scheduler.add_job(bot.broadcast_signals, "interval", hours=4)
 
-    asyncio.run(bootstrap())
+    # Optionally pre-train models synchronously
+    import asyncio
+    loop = asyncio.get_event_loop()
+    for sym in TelegramCryptoBot.popular[:3]:
+        loop.run_until_complete(bot.ai.train(sym))
+
+    # Then run polling (manages its own loop)
+    bot.run()
 
 
 if __name__ == "__main__":
     main()
+
 
