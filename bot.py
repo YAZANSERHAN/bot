@@ -303,7 +303,7 @@ class TelegramCryptoBot:
         self.db = DatabaseManager()
         self.market = CryptoDataManager(self.db)
         self.ai = EnhancedAITradingEngine(self.db, self.market)
-        self.scheduler = AsyncIOScheduler()
+        self.scheduler = None  # Initialize later when event loop is available
         self.app = Application.builder().token(token).build()
 
         # Handlers -------------------------------------------------------------
@@ -312,10 +312,6 @@ class TelegramCryptoBot:
         self.app.add_handler(CommandHandler("help", self.help))
         self.app.add_handler(CallbackQueryHandler(self.cb))
         self.app.add_error_handler(self.err)
-
-        # periodic tasks -------------------------------------------------------
-        self.scheduler.add_job(self.broadcast_signals, "interval", hours=4)
-        self.scheduler.start()
 
     # ── Commands ────────────────────────────────────────────────────────────
     async def start(self, upd: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -371,6 +367,12 @@ class TelegramCryptoBot:
     # ── Run bot ─────────────────────────────────────────────────────────────
     def run(self):
         logger.info("Bot polling …")
+        
+        # Initialize scheduler now that we have an event loop
+        self.scheduler = AsyncIOScheduler()
+        self.scheduler.add_job(self.broadcast_signals, "interval", hours=4)
+        self.scheduler.start()
+        
         self.app.run_polling()
 
 # ───────────────────────────────────────────────────────────────────────────────
