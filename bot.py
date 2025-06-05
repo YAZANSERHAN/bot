@@ -171,7 +171,7 @@ class CryptoDataManager:
             if df.empty:
                 return None
 
-        self.db.cache_set(cache_key, df.to_dict())
+self.db.cache_set(cache_key, df.rename_axis('timestamp').reset_index().to_dict(orient="records"))
         return df
 
 # ───────────────────────────────────────────────────────────────────────────────
