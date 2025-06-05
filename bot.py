@@ -102,7 +102,30 @@ class DatabaseManager:
         return json.loads(val) if val else None
 
     def cache_set(self, key: str, data, ttl=300):
-        self.redis.setex(key, ttl, json.dumps(data))
+        # Handle pandas DataFrame serialization properly
+        if hasattr(data, 'to_dict'):
+            # Convert DataFrame to dict and handle timestamps
+            df_dict = data.to_dict()
+            # Convert any datetime/timestamp objects to ISO strings
+            serializable_dict = self._make_json_serializable(df_dict)
+            self.redis.setex(key, ttl, json.dumps(serializable_dict))
+        else:
+            self.redis.setex(key, ttl, json.dumps(data, default=str))
+
+    def _make_json_serializable(self, obj):
+        """Recursively convert pandas Timestamps and other non-JSON types to strings"""
+        if isinstance(obj, dict):
+            return {k: self._make_json_serializable(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [self._make_json_serializable(item) for item in obj]
+        elif hasattr(obj, 'isoformat'):  # datetime-like objects
+            return obj.isoformat()
+        elif isinstance(obj, (pd.Timestamp, np.datetime64)):
+            return str(obj)
+        elif isinstance(obj, (np.integer, np.floating)):
+            return obj.item()
+        else:
+            return obj
 
     # Table bootstrap ----------------------------------------------------------
     def _init_tables(self):
@@ -151,7 +174,12 @@ class CryptoDataManager:
         from_cache = self.db.cache_get(cache_key)
         if from_cache:
             df = pd.DataFrame(from_cache)
-            df.index = pd.to_datetime(df.index)
+            # Convert string timestamps back to datetime index
+            if 'timestamp' in df.columns:
+                df['timestamp'] = pd.to_datetime(df['timestamp'])
+                df = df.set_index('timestamp')
+            elif df.index.name == 'timestamp' or len(df.index) > 0:
+                df.index = pd.to_datetime(df.index)
             return df
 
         if self.binance:
@@ -171,7 +199,9 @@ class CryptoDataManager:
             if df.empty:
                 return None
 
-self.db.cache_set(cache_key, df.rename_axis('timestamp').reset_index().to_dict(orient="records"))
+        # Cache the DataFrame - reset index to make timestamp a column for JSON serialization
+        cache_df = df.reset_index()
+        self.db.cache_set(cache_key, cache_df, ttl=300)
         return df
 
 # ───────────────────────────────────────────────────────────────────────────────
