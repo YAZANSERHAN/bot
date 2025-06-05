@@ -266,7 +266,7 @@ class TelegramCryptoBot:
             if not sig: continue
             emoji = "🟢" if sig["signal"] == "BUY" else "🔴" if sig["signal"] == "SELL" else "🟡"
             texts.append(f"{emoji} *{sym}* → {sig['signal']} ({sig['confidence']*100:.1f}% @ {sig['price']:.2f})")
-                await msg.edit_text("\n".join(texts) if texts else "No valid signals right now.", parse_mode="Markdown")
+            await msg.edit_text("\n".join(texts) if texts else "No valid signals right now.", parse_mode="Markdown")
     async def cb(self, upd: Update, ctx):
         await upd.callback_query.answer()
         if upd.callback_query.data == "signals":
