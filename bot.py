@@ -300,7 +300,7 @@ class TelegramCryptoBot:
         "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "ADAUSDT",
     ]
 
-    def __init__(self, token: str):
+        def __init__(self, token: str):
         self.sec = SecurityManager()
         self.db = DatabaseManager()
         self.market = CryptoDataManager(self.db)
@@ -314,6 +314,7 @@ class TelegramCryptoBot:
         self.app.add_handler(CommandHandler("help", self.help))
         self.app.add_handler(CallbackQueryHandler(self.cb))
         self.app.add_error_handler(self.err)
+
 
     # ── Commands ────────────────────────────────────────────────────────────
     async def start(self, upd: Update, ctx: ContextTypes.DEFAULT_TYPE):
