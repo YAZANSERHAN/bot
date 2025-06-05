@@ -38,7 +38,7 @@ from telegram.ext import (Application, CallbackQueryHandler, CommandHandler,
 # ── ML libs (all CPU-friendly) ────────────────────────────────────────────────
 from lightgbm import LGBMClassifier
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-from sklearn.metrics import accuracy_score, precision_score, recall_score
+from sklearn.metrics import accuracy_score, precision_score, recFall_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from xgboost import XGBClassifier
@@ -305,7 +305,6 @@ class TelegramCryptoBot:
         self.db = DatabaseManager()
         self.market = CryptoDataManager(self.db)
         self.ai = EnhancedAITradingEngine(self.db, self.market)
-       from apscheduler.schedulers.asyncio import AsyncIOScheduler
         self.scheduler = AsyncIOScheduler()
         self.app = Application.builder().token(token).build()
 
