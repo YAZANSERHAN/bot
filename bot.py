@@ -388,6 +388,14 @@ def main():
 
     bot = TelegramCryptoBot(token)
 
+    # Optional Binance API keys (only if available in your .env)
+    if os.getenv("BINANCE_API_KEY") and os.getenv("BINANCE_API_SECRET"):
+        bot.market.init_binance(
+            os.getenv("BINANCE_API_KEY"),
+            os.getenv("BINANCE_API_SECRET")
+        )
+
+    # Async setup and run
     async def bootstrap():
         for sym in TelegramCryptoBot.popular[:3]:
             await bot.ai.train(sym)
@@ -396,4 +404,7 @@ def main():
 
     asyncio.run(bootstrap())
 
+
+if __name__ == "__main__":
+    main()
 
