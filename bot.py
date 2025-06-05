@@ -42,6 +42,8 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from xgboost import XGBClassifier
+from dotenv import load_dotenv
+load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO,
@@ -379,24 +381,25 @@ class TelegramCryptoBot:
 # Entrypoint
 # ───────────────────────────────────────────────────────────────────────────────
 
-def main():
+async def main():
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     if not token:
         raise RuntimeError("TELEGRAM_BOT_TOKEN env var missing")
 
     bot = TelegramCryptoBot(token)
 
-    # Optional Binance keys ---------------------------------------------------
     if os.getenv("BINANCE_API_KEY") and os.getenv("BINANCE_API_SECRET"):
         bot.market.init_binance(os.getenv("BINANCE_API_KEY"), os.getenv("BINANCE_API_SECRET"))
 
-    # Kick-off initial training (top 3 symbols) -------------------------------
-    async def bootstrap():
-        for sym in TelegramCryptoBot.popular[:3]:
-            await bot.ai.train(sym)
-    asyncio.run(bootstrap())
+    for sym in TelegramCryptoBot.popular[:3]:
+        await bot.ai.train(sym)
 
-    bot.run()
+    bot.scheduler.start()
+    await bot.app.initialize()
+    await bot.app.start()
+    await bot.app.updater.start_polling()
+    await bot.app.updater.idle()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
+
