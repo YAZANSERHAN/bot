@@ -381,25 +381,19 @@ class TelegramCryptoBot:
 # Entrypoint
 # ───────────────────────────────────────────────────────────────────────────────
 
-async def main():
+def main():
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     if not token:
         raise RuntimeError("TELEGRAM_BOT_TOKEN env var missing")
 
     bot = TelegramCryptoBot(token)
 
-    if os.getenv("BINANCE_API_KEY") and os.getenv("BINANCE_API_SECRET"):
-        bot.market.init_binance(os.getenv("BINANCE_API_KEY"), os.getenv("BINANCE_API_SECRET"))
+    async def bootstrap():
+        for sym in TelegramCryptoBot.popular[:3]:
+            await bot.ai.train(sym)
+        bot.scheduler.start()
+        bot.run()
 
-    for sym in TelegramCryptoBot.popular[:3]:
-        await bot.ai.train(sym)
+    asyncio.run(bootstrap())
 
-    bot.scheduler.start()
-    await bot.app.initialize()
-    await bot.app.start()
-    await bot.app.updater.start_polling()
-    await bot.app.updater.idle()
-
-if __name__ == "__main__":
-    asyncio.run(main())
 
